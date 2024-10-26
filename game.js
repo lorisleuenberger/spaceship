@@ -9,9 +9,11 @@ let game = {
             right: ['d'],
         },
     },
-    startbtn: document.getElementById("start"),
-    canvas: document.getElementById("canvas"),
+    startbtn: document.getElementById('start'),
+    canvas: document.getElementById('canvas'),
+    backgroundcolor: 'rgb(253, 253, 255)',
     player: {
+        color: 'rgb(57, 61, 63)',
         size: {
             width: 40,
             height: 40,
@@ -27,27 +29,66 @@ let game = {
         moving: {
             left: false,
             right: false,
+            speed: 1,
         },
     },
+    bullets: {
+        settings: {
+            color: 'rgb(57, 61, 63)',
+            speed: 2,
+            interval: 100,
+            intervalCountdown: 0,
+            size: {
+                width: 4,
+                height: 16,
+            }
+        },
+        objects: [],
+    }
 }
 
 function run() {
     moveplayer();
+    shooting();
     draw();
 }
 
 function moveplayer(direction) {
     if(game.player.moving.left && !game.player.moving.right) {
-        if(game.player.position.x - 2 > 0) {
+        if(game.player.position.x - game.player.moving.speed > 0) {
             game.player.position.previous.x = game.player.position.x 
-            game.player.position.x -= 2
+            game.player.position.x -= game.player.moving.speed
         }
     } else if(game.player.moving.right && !game.player.moving.left) {
-        if(game.player.position.x + 2 < game.canvas.width - game.player.size.width) {
+        if(game.player.position.x + game.player.moving.speed < game.canvas.width - game.player.size.width) {
             game.player.position.previous.x = game.player.position.x 
-            game.player.position.x += 2
+            game.player.position.x += game.player.moving.speed
         }
     }
+}
+
+function shooting() {
+    // Spawn bullets
+    if(game.bullets.settings.intervalCountdown === 0) {
+        game.bullets.objects.push({
+            x: game.player.position.x + game.player.size.width / 2,
+            y: game.player.position.y,
+        })
+        game.bullets.settings.intervalCountdown = game.bullets.settings.interval
+    }
+    game.bullets.settings.intervalCountdown -= 1;
+
+    // update bullets
+    let bulletsToDelete = [];
+    for( let i = 0; i < game.bullets.objects.length; i++ ) {
+        game.bullets.objects[i].y -= game.bullets.settings.speed
+        if(game.bullets.objects[i] <= 0) {
+            bulletsToDelete.push(i)
+        }
+    }
+    bulletsToDelete.forEach(bulletToDelete => {
+        game.bullets.objects.splice(bulletToDelete, 1)
+    });
 }
 
 function draw() {
@@ -56,28 +97,32 @@ function draw() {
         return;
     }
     const ctx = game.canvas.getContext("2d")
-    ctx.fillStyle = "rgb(200 0 0)"
-    if(game.player.position.x != game.player.position.previous.x) {
-        ctx.clearRect(game.player.position.previous.x,game.player.position.previous.y,game.player.size.width,game.player.size.height)
-    }
+
+    ctx.fillStyle = game.backgroundcolor
+    ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
+
+    ctx.fillStyle = game.player.color
     ctx.fillRect(game.player.position.x,game.player.position.y,game.player.size.width,game.player.size.height)
+
+    ctx.fillStyle = game.bullets.settings.color
+    for( let i = 0; i < game.bullets.objects.length; i++ ) {
+        ctx.fillRect( game.bullets.objects[i].x, game.bullets.objects[i].y, game.bullets.settings.size.width, game.bullets.settings.size.height )
+    }
 }
 
 function start() {
     if(game.running) {
-        console.log("game already running")
         return
     }
     game.startbtn.style.display = 'none'
     game.canvas.style.display = 'block'
-    game.intervalId = setInterval( run , 10 )
+    game.intervalId = setInterval( run , 5 )
     game.running = true
 }
 
 
 function pause() {
     if(!game.running) {
-        console.log("game not running")
         return
     }
     clearInterval(game.intervalId)
