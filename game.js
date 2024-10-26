@@ -12,7 +12,18 @@ let game = {
     startbtn: document.getElementById("start"),
     canvas: document.getElementById("canvas"),
     player: {
-        position: 280,
+        size: {
+            width: 40,
+            height: 40,
+        },
+        position: {
+            x: 280,
+            y: 740,
+            previous: {
+                x: 280,
+                y: 740,
+            },
+        },
         moving: {
             left: false,
             right: false,
@@ -21,14 +32,22 @@ let game = {
 }
 
 function run() {
-    if(game.player.moving.left && !game.player.moving.right) {
-        console.log("moving left")
-    } else if(game.player.moving.right && !game.player.moving.left) {
-        console.log("moving right")
-    } else {
-        console.log("standing still")
-    }
+    moveplayer();
     draw();
+}
+
+function moveplayer(direction) {
+    if(game.player.moving.left && !game.player.moving.right) {
+        if(game.player.position.x - 2 > 0) {
+            game.player.position.previous.x = game.player.position.x 
+            game.player.position.x -= 2
+        }
+    } else if(game.player.moving.right && !game.player.moving.left) {
+        if(game.player.position.x + 2 < game.canvas.width - game.player.size.width) {
+            game.player.position.previous.x = game.player.position.x 
+            game.player.position.x += 2
+        }
+    }
 }
 
 function draw() {
@@ -38,7 +57,10 @@ function draw() {
     }
     const ctx = game.canvas.getContext("2d")
     ctx.fillStyle = "rgb(200 0 0)"
-    ctx.fillRect(280,740,40,40)
+    if(game.player.position.x != game.player.position.previous.x) {
+        ctx.clearRect(game.player.position.previous.x,game.player.position.previous.y,game.player.size.width,game.player.size.height)
+    }
+    ctx.fillRect(game.player.position.x,game.player.position.y,game.player.size.width,game.player.size.height)
 }
 
 function start() {
@@ -48,7 +70,7 @@ function start() {
     }
     game.startbtn.style.display = 'none'
     game.canvas.style.display = 'block'
-    game.intervalId = setInterval( run , 20 )
+    game.intervalId = setInterval( run , 10 )
     game.running = true
 }
 
